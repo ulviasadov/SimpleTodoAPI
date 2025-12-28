@@ -2,6 +2,7 @@
 using SimpleTodoAPI.Application.Interfaces.IUnitOfWork;
 using SimpleTodoAPI.Application.Interfaces.Services;
 using SimpleTodoAPI.Domain.Entities;
+using System.Linq.Expressions;
 
 namespace SimpleTodoAPI.Application.Services
 {
@@ -37,8 +38,16 @@ namespace SimpleTodoAPI.Application.Services
             await _uow.SaveAsync();
         }
 
-        public async Task<List<Todo>> GetAllAsync()
+        public async Task<List<Todo>> GetAllAsync(string? search)
         {
+            Expression<Func<Todo, bool>>? filter = null;
+
+            if (search != null)
+            {
+                filter = t => t.Title.Contains(search) || t.BodyText.Contains(search);
+                return await _uow.GetRepository<Todo>().GetByFilter(filter);
+            }
+
             return await _uow.GetRepository<Todo>().GetAllAsync();
         }
 
@@ -49,6 +58,19 @@ namespace SimpleTodoAPI.Application.Services
             if (exist == null) return null;
 
             return exist;
+        }
+
+        public async Task UpdateAsync(TodoUpdateDto dto)
+        {
+            var todo = new Todo
+            {
+                Id = dto.Id,
+                Title = dto.Title,
+                BodyText = dto.BodyText,
+            };
+
+            _uow.GetRepository<Todo>().UpdateAsync(todo);
+            await _uow.SaveAsync();
         }
     }
 }

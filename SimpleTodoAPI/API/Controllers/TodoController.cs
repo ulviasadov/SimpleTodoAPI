@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SimpleTodoAPI.Application.DTOs;
 using SimpleTodoAPI.Application.Interfaces.Services;
-using SimpleTodoAPI.Domain.Entities;
 
 namespace SimpleTodoAPI.API.Controllers
 {
@@ -17,9 +16,9 @@ namespace SimpleTodoAPI.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery]string? search)
         {
-            return Ok(await _service.GetAllAsync());
+            return Ok(await _service.GetAllAsync(search));
         }
 
         [HttpGet("{id}")]
@@ -29,9 +28,23 @@ namespace SimpleTodoAPI.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create(TodoCreateDto dto)
+        public async Task<IActionResult> Create([FromBody]TodoCreateDto dto)
         {
+            if(!ModelState.IsValid) return BadRequest(dto);
+
             return Ok(await _service.AddAsync(dto));
+        }
+
+        [HttpDelete("{id}")]
+        public async Task Delete(int id)
+        {
+            await _service.DeleteAsync(id);
+        }
+
+        [HttpPut]
+        public async Task Update(TodoUpdateDto dto)
+        {
+            await _service.UpdateAsync(dto);
         }
     }
 }
